@@ -234,7 +234,7 @@ Error | Text
 11    | Not correct object format to create tag/pill
 
 <hr>
-### onBeforeAdd(pill, item)
+### onBeforeAdd(pill, item, callback)
 
 This event is triggered before HTML element appended to pills list. This method has to return `pill`. 
 
@@ -279,11 +279,11 @@ This event is triggered before a tag is removed. The function for this event sho
 **Example**
 
     $('#bs-tags').tags({
-        onBeforeRemove: function(pill){
+        onBeforeRemove: function(pill, callback){
             if($(pill).data('tag-id') === 'Apple') {
-                return false; // "Apple" tags are unremovable.
+                return callback(false); // "Apple" tags are unremovable.
             } else {
-                return true;
+                return callback(true);
             }
         }
     });

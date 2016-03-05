@@ -1,5 +1,7 @@
-;
-(function($) {
+/**
+ * https://github.com/Serhioromano/bootstrap-tags
+ */
+(function ($) {
     "use strict";
 
     var defaults = {
@@ -28,7 +30,7 @@
         input_name: 'tags[]',
 
         lang: {
-            delete: "Delete",
+            changeState: "Delete",
             limit: "You have reached limit of only {0} tags to be added."
         },
 
@@ -40,22 +42,22 @@
 
         remove_url: '',
 
-        onLoadDefaults: function(values) {
+        onLoadDefaults: function (values) {
             return values;
         },
-        onRemove: function(pill) {
+        onRemove: function (pill) {
         },
-        onError: function(num, msg) {
+        onError: function (num, msg) {
             alert(msg);
         },
-        onBeforeAdd: function(pill, value) {
+        onBeforeAdd: function (pill, value) {
             return pill;
         },
-        onLoadSuggestions: function(values) {
+        onLoadSuggestions: function (values) {
             return values;
         },
         onDuplicate: null,
-        onBeforeRemove: function(pill) {
+        onBeforeRemove: function (pill) {
             return true;
         }
     }
@@ -67,25 +69,25 @@
 
         var $self = this;
 
-        if($self.options.values_url) {
+        if ($self.options.values_url) {
             $.ajax({
                 dataType: 'json', type: 'get', async: false, url: $self.options.values_url
-            }).done(function(json) {
-                    if(typeof json == "object") {
-                        $self.options.values = $.merge($self.options.values, json);
-                    }
-                });
+            }).done(function (json) {
+                if (typeof json == "object") {
+                    $self.options.values = $.merge($self.options.values, json);
+                }
+            });
         }
         $self.options.values = $self.options.onLoadDefaults($self.options.values);
 
         var pills_list = $(document.createElement('span')).addClass('pills-list').appendTo(context);
 
         $self.options.values = $self._prepare($self.options.values);
-        $.each($self.options.values, function(key, value) {
+        $.each($self.options.values, function (key, value) {
             $self.addTag(pills_list, value);
         });
 
-        if($self.options.can_add) {
+        if ($self.options.can_add) {
 
             var labels = [], mapped = [];
 
@@ -95,45 +97,45 @@
                 .css('outline', 'none')
                 .typeahead({
                     items: $self.options.suggestion_limit,
-                    source: function(query, process) {
+                    source: function (query, process) {
 
                         var suggestions = $.merge([], $self.options.suggestions);
                         labels = [];
                         mapped = {};
 
-                        if($self.options.suggestion_url) {
+                        if ($self.options.suggestion_url) {
                             $.ajax({
-                                dataType: 'json', type: 'post', async: false, url: $self.options.suggestion_url,
+                                dataType: 'json', type: 'get', async: false, url: $self.options.suggestion_url,
                                 data: {q: query, limit: $self.options.suggestion_limit}
-                            }).done(function(json) {
-                                    if(typeof json == "object") {
-                                        suggestions = $.merge(suggestions, json);
-                                    }
-                                });
+                            }).done(function (json) {
+                                if (typeof json == "object") {
+                                    suggestions = $.merge(suggestions, json);
+                                }
+                            });
                         }
 
                         suggestions = $self.options.onLoadSuggestions(suggestions);
                         suggestions = $self._prepare(suggestions);
 
-                        $.each(suggestions, function(i, item) {
+                        $.each(suggestions, function (i, item) {
                             mapped[item.suggest] = item
                             labels.push(item.suggest)
                         });
 
                         return labels;
                     },
-                    updater: function(item) {
+                    updater: function (item) {
                         $self._addTag(pills_list, input, mapped[item]);
                     }
                 })
-                .click(function(e){
+                .click(function (e) {
                     e.stopPropagation();
                 });
 
-            if($self.options.only_suggestions == false) {
-                input.keypress(function(e) {
-                    if(!$(this).val()) return;
-                    if(e.keyCode == 13) {
+            if ($self.options.only_suggestions == false) {
+                input.keypress(function (e) {
+                    if (!$(this).val()) return;
+                    if (e.keyCode == 13) {
                         $self._addTag(pills_list, $(this));
                         return false;
                     }
@@ -141,12 +143,11 @@
             }
 
 
-
             var add = $($self.options.templates.input_pill)
                 .append(input)
                 .append($($self.options.templates.ok_icon)
                     .css('cursor', 'pointer')
-                    .click(function(e) {
+                    .click(function (e) {
                         e.stopPropagation();
                         $self._addTag(pills_list, input);
                         input.focus();
@@ -163,14 +164,14 @@
                     .addClass('tag-add')
                     .append($self.options.templates.plus_icon)
                 )
-                .click(function() {
+                .click(function () {
                     add.show();
                     input.focus();
                     var $this = $(this);
                     $this.hide();
 
-                    setTimeout(function() {
-                        $('body').one('click', function() {
+                    setTimeout(function () {
+                        $('body').one('click', function () {
                             add.hide();
                             $this.show();
                         });
@@ -182,14 +183,14 @@
     }
 
 
-    Tags.prototype._prepare = function(values) {
+    Tags.prototype._prepare = function (values) {
 
-        $.each(values, function(key, value) {
-            if(!value) {
+        $.each(values, function (key, value) {
+            if (!value) {
                 delete values[key];
                 return true;
             }
-            if(typeof value == "string") {
+            if (typeof value == "string") {
                 values[key] = {id: value, text: value, suggest: value};
             }
             values[key].suggest = values[key].suggest || values[key].text;
@@ -198,70 +199,70 @@
             values[key].num = parseInt(value.num || '0');
         });
         return values;
-    }
-    Tags.prototype._addTag = function(pills_list, input, value) {
+    };
+    Tags.prototype._addTag = function (pills_list, input, value) {
 
-        if(!value) {
+        if (!value) {
             value = this._prepare([input.val()])[0];
         }
 
-        if(this.addTag(pills_list, value)) {
+        this.addTag(pills_list, value, function () {
             input.val('').focus();
-        }
-    }
-    Tags.prototype.addTag = function(pills_list, value) {
+        });
+    };
+    Tags.prototype.addTag = function (pills_list, value, callback) {
         var $self = this;
 
-        if(!value) return false;
+        if (!value) return false;
 
-        if(parseInt($self.options.limit) > 0 && pills_list.children().length >= parseInt($self.options.limit)) {
+        if (parseInt($self.options.limit) > 0 && pills_list.children().length >= parseInt($self.options.limit)) {
             $self.options.onError(10, $self.options.lang.limit.format($self.options.limit));
             return false;
         }
 
-        if(typeof value.id === 'undefined' || typeof value.text === 'undefined') {
+        if (typeof value.id === 'undefined' || typeof value.text === 'undefined') {
             $self.options.onError(11, 'Not correct object format to create tag/pill');
             $.error('Not correct object format to create tag/pill');
         }
 
         var unique = '';
-        $.each(pills_list.children(), function(key, val) {
-            if(value.id.toString().toLowerCase() == $(val).data('tag-id').toString().toLowerCase()) {
+        $.each(pills_list.children(), function (key, val) {
+            if (value.id.toString().toLowerCase() == $(val).data('tag-id').toString().toLowerCase()) {
                 unique = $(val);
                 return false;
             }
         });
 
-        if(unique) {
-            if(!$self.options.onDuplicate){
+        if (unique) {
+            if (!$self.options.onDuplicate) {
                 var color = $(pills_list.children()[0]).css('background-color');
-                unique.stop().animate({"backgroundColor": $self.options.double_hilight}, 100, 'swing', function() {
-                    unique.stop().animate({"backgroundColor": color}, 100, 'swing', function(){
+                unique.stop().animate({"backgroundColor": $self.options.double_hilight}, 100, 'swing', function () {
+                    unique.stop().animate({"backgroundColor": color}, 100, 'swing', function () {
                         unique.css('background-color', '');
                     });
                 });
                 return false;
             } else {
-                if($self.options.onDuplicate(unique, value) != true) {
+                if ($self.options.onDuplicate(unique, value) != true) {
                     return false;
                 }
             }
         }
 
-        if(value.url) {
+        if (value.url) {
             var title = value.title ? ' data-toggle="tooltip" title="' + value.title + '"' : '';
             value.text = '<a class="tag-link" ' + title + ' target="' + $self.options.tag_link_target + '" href="' + value.url + '">' + value.text + '</a>';
         }
 
         var icon = '';
-        if($self.options.can_delete) {
+        if ($self.options.can_delete) {
             icon = $(document.createElement('a'))
                 .attr({
                     "href": "javascript:void(0)",
                     "class": "tag-remove"
                 })
                 .html($self.options.templates.delete_icon.toString())
-                .click(function() {
+                .click(function () {
                     $self.removeTag(this);
                 });
         }
@@ -283,46 +284,50 @@
                 "white-space": "nowrap"
             });
 
-        tag = $self.options.onBeforeAdd(tag, value);
+        $self.options.onBeforeAdd(tag, value, function (tag) {
+            pills_list.append(tag);
+            $('[data-toggle="tooltip"]').tooltip({html:true});
+            if(typeof callback == 'function'){
+                callback();
+            }
+        });
+    };
 
-        pills_list.append(tag);
-
-        $('[data-toggle="tooltip"]').tooltip();
-
-        return true;
-    }
-
-    Tags.prototype.removeTag = function(tag) {
+    Tags.prototype.removeTag = function (tag) {
         var $self = this;
         var $tag = $(tag).closest('[data-tag-id]');
-        
-        if($self.options.onBeforeRemove($tag) === false) {
-            return;
-        }
 
-        $tag.animate({width: 0, "padding-right": 0, "padding-left": 0}, 200, 'swing', function() {
-            var $this = $(this);
-            if($self.options.remove_url) {
-                $.ajax({
-                    dataType: 'json', type: 'post', async: false, url: $self.options.remove_url, data: {id: $this.data('tag-id')}
+        $self.options.onBeforeRemove($tag, function (result) {
+            if (result) {
+                $tag.animate({width: 0, "padding-right": 0, "padding-left": 0}, 200, 'swing', function () {
+                    var $this = $(this);
+                    if ($self.options.remove_url) {
+                        $.ajax({
+                            dataType: 'json',
+                            type: 'post',
+                            async: false,
+                            url: $self.options.remove_url,
+                            data: {id: $this.data('tag-id')}
+                        });
+                    }
+                    $self.options.onRemove($this);
+                    $this.remove();
                 });
             }
-            $self.options.onRemove($this);
-            $this.remove();
-        });
+        })
     }
 
-    $.fn.tags = function(params) {
-        return this.each(function() {
+    $.fn.tags = function (params) {
+        return this.each(function () {
             new Tags($(this), params);
         })
     }
 }(window.jQuery));
 
-if(!String.prototype.format) {
-    String.prototype.format = function() {
+if (!String.prototype.format) {
+    String.prototype.format = function () {
         var args = arguments;
-        return this.replace(/{(\d+)}/g, function(match, number) {
+        return this.replace(/{(\d+)}/g, function (match, number) {
             return typeof args[number] != 'undefined' ? args[number] : match;
         });
     };
